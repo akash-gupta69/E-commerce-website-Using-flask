@@ -1,0 +1,320 @@
+{% extends "base.html" %}
+{% block content %}
+<style>
+    .hero {
+        height: 55vh;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        text-align: center;
+        background: linear-gradient(135deg, rgba(157, 80, 187, 0.3), rgba(10,10,11,0.9)), url('https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&w=1200') no-repeat center center/cover;
+        border-radius: 24px;
+        margin-bottom: 3rem;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+        position: relative;
+        overflow: hidden;
+    }
+    .hero::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: radial-gradient(circle at 30% 50%, rgba(157,80,187,0.2) 0%, transparent 60%);
+    }
+    .hero h1 {
+        font-size: 3.5rem;
+        margin-bottom: 1rem;
+        position: relative;
+        z-index: 1;
+        animation: fadeUp 0.8s ease;
+    }
+    .hero p {
+        position: relative;
+        z-index: 1;
+        color: var(--text-muted);
+        font-size: 1.15rem;
+        margin-bottom: 1.5rem;
+        animation: fadeUp 0.8s ease 0.1s both;
+    }
+    .hero .btn {
+        position: relative;
+        z-index: 1;
+        animation: fadeUp 0.8s ease 0.2s both;
+        padding: 1rem 2.5rem;
+        font-size: 1.05rem;
+    }
+
+    @keyframes fadeUp {
+        from { opacity: 0; transform: translateY(25px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ==================== TWO-COLUMN LAYOUT ==================== */
+    .home-layout {
+        display: grid;
+        grid-template-columns: 240px 1fr;
+        gap: 2rem;
+        align-items: start;
+    }
+
+    /* ==================== LEFT SIDEBAR ==================== */
+    .category-sidebar {
+        position: sticky;
+        top: 80px;
+        background: var(--surface-dark);
+        border: 1px solid var(--glass-border);
+        border-radius: 16px;
+        padding: 1.2rem;
+        animation: fadeUp 0.5s ease;
+    }
+
+    .sidebar-title {
+        font-size: 0.8rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 1.5px;
+        color: var(--text-muted);
+        margin-bottom: 1rem;
+        padding-bottom: 0.8rem;
+        border-bottom: 1px solid var(--glass-border);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .sidebar-title i {
+        color: var(--accent-primary);
+    }
+
+    .category-sidebar a {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 0.75rem 0.9rem;
+        color: var(--text-muted);
+        text-decoration: none;
+        font-size: 0.92rem;
+        font-weight: 500;
+        border-radius: 10px;
+        transition: all 0.25s ease;
+        margin-bottom: 2px;
+    }
+
+    .category-sidebar a:hover {
+        background: var(--glass-bg);
+        color: var(--text-main);
+        transform: translateX(4px);
+    }
+
+    .category-sidebar a.active-cat {
+        background: linear-gradient(45deg, var(--accent-primary), var(--accent-secondary));
+        color: white;
+        box-shadow: 0 4px 15px var(--accent-glow);
+    }
+
+    .category-sidebar a.active-cat i {
+        color: white;
+    }
+
+    .category-sidebar a i {
+        width: 20px;
+        text-align: center;
+        font-size: 0.95rem;
+        color: var(--accent-primary);
+        transition: color 0.25s ease;
+    }
+
+    .sidebar-divider {
+        height: 1px;
+        background: var(--glass-border);
+        margin: 0.5rem 0;
+    }
+
+    /* ==================== MAIN CONTENT ==================== */
+    .main-content {
+        min-width: 0;
+    }
+
+    /* Products */
+    .section-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 2rem;
+    }
+    .section-header h2 { font-size: 1.8rem; }
+    .category-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+        gap: 2rem;
+        margin-bottom: 4rem;
+    }
+    .product-card {
+        background: var(--surface-dark);
+        border: 1px solid var(--glass-border);
+        border-radius: 16px;
+        padding: 1.5rem;
+        transition: all 0.4s ease;
+        position: relative;
+        overflow: hidden;
+        animation: fadeUp 0.5s ease both;
+    }
+    .product-card:nth-child(1) { animation-delay: 0s; }
+    .product-card:nth-child(2) { animation-delay: 0.05s; }
+    .product-card:nth-child(3) { animation-delay: 0.1s; }
+    .product-card:nth-child(4) { animation-delay: 0.15s; }
+    .product-card:nth-child(5) { animation-delay: 0.2s; }
+    .product-card:nth-child(6) { animation-delay: 0.25s; }
+    .product-card:nth-child(7) { animation-delay: 0.3s; }
+    .product-card:nth-child(8) { animation-delay: 0.35s; }
+
+    .product-card:hover {
+        transform: translateY(-8px);
+        border-color: var(--accent-primary);
+        box-shadow: 0 12px 30px rgba(0,0,0,0.3);
+    }
+    .product-img {
+        width: 100%;
+        height: 200px;
+        object-fit: cover;
+        border-radius: 12px;
+        margin-bottom: 1rem;
+        background: var(--bg-dark);
+    }
+    .product-name {
+        font-size: 1.1rem;
+        font-weight: 600;
+        margin-bottom: 0.4rem;
+    }
+    .product-category {
+        color: var(--text-muted);
+        font-size: 0.85rem;
+        margin-bottom: 0.8rem;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+    .product-bottom {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: 0.5rem;
+    }
+    .product-price {
+        color: var(--accent-primary);
+        font-weight: 700;
+        font-size: 1.2rem;
+    }
+    .card-actions {
+        display: flex;
+        gap: 0.5rem;
+    }
+    .card-actions a {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 36px;
+        height: 36px;
+        border-radius: 10px;
+        text-decoration: none;
+        transition: all 0.3s ease;
+        font-size: 0.9rem;
+    }
+    .card-actions .view-btn {
+        background: var(--glass-bg);
+        color: var(--text-main);
+        border: 1px solid var(--glass-border);
+    }
+    .card-actions .view-btn:hover {
+        border-color: var(--accent-primary);
+        color: var(--accent-primary);
+    }
+    .card-actions .cart-btn {
+        background: linear-gradient(45deg, var(--accent-primary), var(--accent-secondary));
+        color: white;
+    }
+    .card-actions .cart-btn:hover {
+        box-shadow: 0 4px 12px var(--accent-glow);
+        transform: scale(1.05);
+    }
+
+    @media (max-width: 768px) {
+        .hero h1 { font-size: 2.2rem; }
+        .home-layout {
+            grid-template-columns: 1fr;
+        }
+        .category-sidebar {
+            position: static;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0.3rem;
+            padding: 1rem;
+        }
+        .category-sidebar .sidebar-title {
+            grid-column: 1 / -1;
+            margin-bottom: 0.5rem;
+        }
+        .category-sidebar .sidebar-divider { display: none; }
+        .category-sidebar a {
+            font-size: 0.82rem;
+            padding: 0.6rem 0.7rem;
+            gap: 8px;
+            justify-content: center;
+        }
+        .category-grid { grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); }
+    }
+
+    @media (max-width: 480px) {
+        .category-sidebar {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+</style>
+
+<div class="hero">
+    <h1>Experience Premium Shopping</h1>
+    <p>From Clothings to Electronics — curated collections you'll love.</p>
+    <a href="#featured" class="btn btn-primary">Shop Now <i class="fas fa-arrow-right" style="margin-left: 8px;"></i></a>
+</div>
+
+<div class="home-layout">
+    <!-- Left Sidebar: Categories -->
+    <aside class="category-sidebar">
+        <div class="sidebar-title"><i class="fas fa-th-large"></i> Categories</div>
+        <a href="{{ url_for('shop.category', category_name='Clothings') }}"><i class="fas fa-tshirt"></i> Clothings</a>
+        <a href="{{ url_for('shop.category', category_name='Sneakers') }}"><i class="fas fa-shoe-prints"></i> Sneakers</a>
+        <a href="{{ url_for('shop.category', category_name='Fashion') }}"><i class="fas fa-gem"></i> Fashion</a>
+        <div class="sidebar-divider"></div>
+        <a href="{{ url_for('shop.category', category_name='Groceries') }}"><i class="fas fa-apple-alt"></i> Groceries</a>
+        <!-- <a href="{{ url_for('shop.category', category_name='Vegetables') }}"><i class="fas fa-carrot"></i> Vegetables</a> -->
+        <a href="{{ url_for('shop.category', category_name='Electronics') }}"><i class="fas fa-headphones"></i> Electronics</a>
+        <a href="{{ url_for('shop.category', category_name='Basic Needs') }}"><i class="fas fa-shopping-basket"></i> Basic Needs</a>
+        <a href="{{ url_for('shop.category', category_name='Kids') }}"><i class="fas fa-child"></i> Kids</a>
+    </aside>
+
+    <!-- Right: Main Product Content -->
+    <div class="main-content">
+        <div class="section-header" id="featured">
+            <h2>Featured Products</h2>
+            <a href="{{ url_for('shop.search') }}" style="color: var(--accent-primary); text-decoration: none; font-weight: 500;">View All <i class="fas fa-arrow-right"></i></a>
+        </div>
+
+        <div class="category-grid">
+            {% for product in products %}
+            <div class="product-card">
+                <img src="{{ product.image_url if product.image_url else url_for('static', filename='product_pics/' + product.image_file) }}" alt="{{ product.name }}" class="product-img" onerror="this.src='https://via.placeholder.com/300x200/161618/9d50bb?text={{ product.name|urlencode }}'">
+                <div class="product-category">{{ product.category }}</div>
+                <div class="product-name">{{ product.name }}</div>
+                <div class="product-bottom">
+                    <div class="product-price">₹{{ "%.2f"|format(product.price) }}</div>
+                    <div class="card-actions">
+                        <a href="{{ url_for('shop.product_detail', product_id=product.id) }}" class="view-btn" title="View Details"><i class="fas fa-eye"></i></a>
+                        <a href="{{ url_for('shop.add_to_cart', product_id=product.id) }}" class="cart-btn" title="Add to Cart"><i class="fas fa-plus"></i></a>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+

@@ -1,0 +1,376 @@
+{% extends "base.html" %}
+{% block content %}
+<style>
+    .addr-page-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 2rem;
+    }
+    .addr-page-header h1 i { color: var(--accent-primary); margin-right: 10px; }
+    .add-addr-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 0.7rem 1.5rem;
+        border-radius: 10px;
+        background: linear-gradient(45deg, var(--accent-primary), var(--accent-secondary));
+        color: white;
+        border: none;
+        cursor: pointer;
+        font-weight: 600;
+        font-family: 'Outfit', sans-serif;
+        font-size: 0.95rem;
+        transition: all 0.3s ease;
+    }
+    .add-addr-btn:hover {
+        box-shadow: 0 5px 20px var(--accent-glow);
+        transform: translateY(-2px);
+    }
+
+    .addr-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 3rem;
+    }
+    .addr-card {
+        background: var(--surface-dark);
+        border: 1px solid var(--glass-border);
+        border-radius: 16px;
+        padding: 1.5rem;
+        position: relative;
+        transition: all 0.3s ease;
+        animation: fadeUp 0.4s ease;
+    }
+    @keyframes fadeUp {
+        from { opacity: 0; transform: translateY(15px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    .addr-card:hover {
+        border-color: rgba(157, 80, 187, 0.4);
+    }
+    .addr-card.default { border-color: var(--accent-primary); }
+    .default-badge {
+        display: inline-block;
+        background: linear-gradient(45deg, var(--accent-primary), var(--accent-secondary));
+        color: white;
+        font-size: 0.75rem;
+        font-weight: 600;
+        padding: 0.2rem 0.8rem;
+        border-radius: 20px;
+        margin-bottom: 0.8rem;
+    }
+    .addr-name {
+        font-size: 1.15rem;
+        font-weight: 600;
+        margin-bottom: 0.3rem;
+    }
+    .addr-phone {
+        color: var(--text-muted);
+        font-size: 0.9rem;
+        margin-bottom: 0.8rem;
+    }
+    .addr-lines {
+        color: var(--text-muted);
+        font-size: 0.9rem;
+        line-height: 1.6;
+        margin-bottom: 1.2rem;
+    }
+    .addr-actions {
+        display: flex;
+        gap: 0.6rem;
+        flex-wrap: wrap;
+    }
+    .addr-actions button, .addr-actions a {
+        padding: 0.45rem 1rem;
+        border-radius: 8px;
+        font-size: 0.82rem;
+        font-weight: 600;
+        border: 1px solid var(--glass-border);
+        background: var(--glass-bg);
+        color: var(--text-muted);
+        cursor: pointer;
+        text-decoration: none;
+        font-family: 'Outfit', sans-serif;
+        transition: all 0.2s;
+    }
+    .addr-actions button:hover, .addr-actions a:hover {
+        color: var(--accent-primary);
+        border-color: var(--accent-primary);
+    }
+    .addr-actions .btn-del:hover { color: #f44336; border-color: #f44336; }
+
+    /* Modal */
+    .modal-overlay {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(0,0,0,0.6);
+        z-index: 2000;
+        justify-content: center;
+        align-items: center;
+    }
+    .modal-overlay.active { display: flex; }
+    .modal-box {
+        background: var(--surface-dark);
+        border: 1px solid var(--glass-border);
+        border-radius: 20px;
+        padding: 2.5rem;
+        width: 90%;
+        max-width: 500px;
+        max-height: 90vh;
+        overflow-y: auto;
+        animation: fadeUp 0.3s ease;
+    }
+    .modal-box h2 {
+        margin-bottom: 1.5rem;
+        font-size: 1.4rem;
+    }
+    .form-group {
+        margin-bottom: 1.2rem;
+    }
+    .form-group label {
+        display: block;
+        font-size: 0.85rem;
+        font-weight: 500;
+        color: var(--text-muted);
+        margin-bottom: 0.4rem;
+    }
+    .form-group input {
+        width: 100%;
+        padding: 0.75rem 1rem;
+        background: var(--bg-dark);
+        border: 1px solid var(--glass-border);
+        border-radius: 10px;
+        color: var(--text-main);
+        font-family: 'Outfit', sans-serif;
+        font-size: 0.95rem;
+        transition: border-color 0.3s;
+    }
+    .form-group input:focus {
+        outline: none;
+        border-color: var(--accent-primary);
+    }
+    .modal-actions {
+        display: flex;
+        gap: 1rem;
+        margin-top: 1.5rem;
+    }
+    .modal-actions button {
+        flex: 1;
+        padding: 0.8rem;
+        border-radius: 10px;
+        font-weight: 600;
+        font-family: 'Outfit', sans-serif;
+        cursor: pointer;
+        border: none;
+        font-size: 0.95rem;
+        transition: all 0.3s;
+    }
+    .btn-save {
+        background: linear-gradient(45deg, var(--accent-primary), var(--accent-secondary));
+        color: white;
+    }
+    .btn-save:hover { box-shadow: 0 4px 15px var(--accent-glow); }
+    .btn-cancel {
+        background: var(--glass-bg);
+        border: 1px solid var(--glass-border) !important;
+        color: var(--text-muted);
+    }
+
+    .empty-addr {
+        text-align: center;
+        padding: 4rem;
+    }
+    .empty-addr i {
+        font-size: 3.5rem;
+        color: var(--text-muted);
+        margin-bottom: 1rem;
+    }
+
+    @media (max-width: 600px) {
+        .addr-grid { grid-template-columns: 1fr; }
+    }
+</style>
+
+{% include "shop/_account_tabs.html" %}
+
+<div class="addr-page-header">
+    <h2><i class="fas fa-map-marker-alt" style="color: var(--accent-primary); margin-right: 10px;"></i>Manage Addresses</h2>
+    <button class="add-addr-btn" onclick="openAddModal()"><i class="fas fa-plus"></i> Add Address</button>
+</div>
+
+{% if addresses %}
+<div class="addr-grid">
+    {% for addr in addresses %}
+    <div class="addr-card {{ 'default' if addr.is_default }}">
+        {% if addr.is_default %}
+        <span class="default-badge"><i class="fas fa-check-circle"></i> Default</span>
+        {% endif %}
+        <div class="addr-name">{{ addr.full_name }}</div>
+        <div class="addr-phone"><i class="fas fa-phone" style="margin-right: 6px;"></i>{{ addr.phone }}</div>
+        <div class="addr-lines">
+            {{ addr.address_line1 }}<br>
+            {% if addr.address_line2 %}{{ addr.address_line2 }}<br>{% endif %}
+            {{ addr.city }}, {{ addr.state }} - {{ addr.pincode }}
+        </div>
+        <div class="addr-actions">
+            <button class="btn-edit-addr"
+                    data-id="{{ addr.id }}"
+                    data-name="{{ addr.full_name }}"
+                    data-phone="{{ addr.phone }}"
+                    data-line1="{{ addr.address_line1 }}"
+                    data-line2="{{ addr.address_line2 or '' }}"
+                    data-city="{{ addr.city }}"
+                    data-state="{{ addr.state }}"
+                    data-pin="{{ addr.pincode }}">
+                <i class="fas fa-edit"></i> Edit
+            </button>
+            {% if not addr.is_default %}
+            <form action="{{ url_for('shop.set_default_address', address_id=addr.id) }}" method="POST" style="display:inline;">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                <button type="submit"><i class="fas fa-star"></i> Set Default</button>
+            </form>
+            {% endif %}
+            <form action="{{ url_for('shop.delete_address', address_id=addr.id) }}" method="POST" style="display:inline;">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                <button type="submit" class="btn-del" onclick="return confirm('Delete this address?')"><i class="fas fa-trash"></i> Delete</button>
+            </form>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="empty-addr">
+    <i class="fas fa-map-marker-alt"></i>
+    <p style="color: var(--text-muted);">No saved addresses yet.</p>
+</div>
+{% endif %}
+
+<!-- Add Address Modal -->
+<div class="modal-overlay" id="addModal">
+    <div class="modal-box">
+        <h2><i class="fas fa-plus-circle" style="color: var(--accent-primary); margin-right: 8px;"></i>Add Address</h2>
+        <form action="{{ url_for('shop.add_address') }}" method="POST">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+            <div class="form-group">
+                <label>Full Name *</label>
+                <input type="text" name="full_name" required placeholder="John Doe">
+            </div>
+            <div class="form-group">
+                <label>Phone *</label>
+                <input type="text" name="phone" required placeholder="+91 9876543210">
+            </div>
+            <div class="form-group">
+                <label>Address Line 1 *</label>
+                <input type="text" name="address_line1" required placeholder="House/Flat No., Street">
+            </div>
+            <div class="form-group">
+                <label>Address Line 2</label>
+                <input type="text" name="address_line2" placeholder="Landmark, Area">
+            </div>
+            <div class="form-group">
+                <label>City *</label>
+                <input type="text" name="city" required placeholder="Mumbai">
+            </div>
+            <div class="form-group">
+                <label>State *</label>
+                <input type="text" name="state" required placeholder="Maharashtra">
+            </div>
+            <div class="form-group">
+                <label>Pincode *</label>
+                <input type="text" name="pincode" required placeholder="400001">
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="btn-cancel" onclick="closeAddModal()">Cancel</button>
+                <button type="submit" class="btn-save">Save Address</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Edit Address Modal -->
+<div class="modal-overlay" id="editModal">
+    <div class="modal-box">
+        <h2><i class="fas fa-edit" style="color: var(--accent-primary); margin-right: 8px;"></i>Edit Address</h2>
+        <form id="editForm" method="POST">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+            <div class="form-group">
+                <label>Full Name *</label>
+                <input type="text" name="full_name" id="edit_full_name" required>
+            </div>
+            <div class="form-group">
+                <label>Phone *</label>
+                <input type="text" name="phone" id="edit_phone" required>
+            </div>
+            <div class="form-group">
+                <label>Address Line 1 *</label>
+                <input type="text" name="address_line1" id="edit_line1" required>
+            </div>
+            <div class="form-group">
+                <label>Address Line 2</label>
+                <input type="text" name="address_line2" id="edit_line2">
+            </div>
+            <div class="form-group">
+                <label>City *</label>
+                <input type="text" name="city" id="edit_city" required>
+            </div>
+            <div class="form-group">
+                <label>State *</label>
+                <input type="text" name="state" id="edit_state" required>
+            </div>
+            <div class="form-group">
+                <label>Pincode *</label>
+                <input type="text" name="pincode" id="edit_pincode" required>
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="btn-cancel" onclick="closeEditModal()">Cancel</button>
+                <button type="submit" class="btn-save">Update Address</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+function openAddModal() { document.getElementById('addModal').classList.add('active'); }
+function closeAddModal() { document.getElementById('addModal').classList.remove('active'); }
+
+function openEditModal(id, name, phone, l1, l2, city, state, pin) {
+    document.getElementById('editForm').action = '/address/edit/' + id;
+    document.getElementById('edit_full_name').value = name;
+    document.getElementById('edit_phone').value = phone;
+    document.getElementById('edit_line1').value = l1;
+    document.getElementById('edit_line2').value = l2;
+    document.getElementById('edit_city').value = city;
+    document.getElementById('edit_state').value = state;
+    document.getElementById('edit_pincode').value = pin;
+    document.getElementById('editModal').classList.add('active');
+}
+function closeEditModal() { document.getElementById('editModal').classList.remove('active'); }
+
+// Attach edit button handlers via data attributes
+document.querySelectorAll('.btn-edit-addr').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+        openEditModal(
+            this.dataset.id,
+            this.dataset.name,
+            this.dataset.phone,
+            this.dataset.line1,
+            this.dataset.line2 || '',
+            this.dataset.city,
+            this.dataset.state,
+            this.dataset.pin
+        );
+    });
+});
+
+// Close modal on overlay click
+document.getElementById('addModal').addEventListener('click', function(e) {
+    if (e.target === this) closeAddModal();
+});
+document.getElementById('editModal').addEventListener('click', function(e) {
+    if (e.target === this) closeEditModal();
+});
+</script>
+{% endblock %}

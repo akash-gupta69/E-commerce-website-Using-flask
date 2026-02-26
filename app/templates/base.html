@@ -1,0 +1,785 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="AuxyysKart - Premium e-commerce platform for clothing, sneakers, fashion, groceries and electronics.">
+    <title>AuxyysKart - {{ title if title else "Premium E-commerce" }}</title>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root {
+            --bg-dark: #0a0a0b;
+            --surface-dark: #161618;
+            --surface-hover: #1e1e21;
+            --accent-primary: #9d50bb;
+            --accent-secondary: #6e48aa;
+            --accent-glow: rgba(157, 80, 187, 0.25);
+            --text-main: #e0e0e0;
+            --text-muted: #a0a0a0;
+            --glass-bg: rgba(255, 255, 255, 0.05);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --success: #4caf50;
+            --danger: #f44336;
+            --warning: #ff9800;
+            --info: #2196f3;
+        }
+
+        /* ==================== LIGHT MODE ==================== */
+        body.light-mode {
+            --bg-dark: #f4f4f8;
+            --surface-dark: #ffffff;
+            --surface-hover: #eeeef2;
+            --accent-primary: #8e3aad;
+            --accent-secondary: #5c3d99;
+            --accent-glow: rgba(142, 58, 173, 0.18);
+            --text-main: #1a1a2e;
+            --text-muted: #5a5a7a;
+            --glass-bg: rgba(0, 0, 0, 0.04);
+            --glass-border: rgba(0, 0, 0, 0.1);
+        }
+
+        body.light-mode .navbar-top {
+            background: rgba(255, 255, 255, 0.9);
+        }
+
+        body.light-mode .mobile-nav {
+            background: #ffffff;
+        }
+
+        body.light-mode .footer {
+            background: #ffffff;
+        }
+
+        /* ==================== THEME TOGGLE ==================== */
+        .theme-toggle {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            color: var(--text-main);
+            width: 40px;
+            height: 40px;
+            border-radius: 12px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .theme-toggle:hover {
+            background: var(--accent-glow);
+            border-color: var(--accent-primary);
+            transform: scale(1.08);
+        }
+
+        .theme-toggle .fa-sun,
+        .theme-toggle .fa-moon {
+            transition: all 0.4s ease;
+            position: absolute;
+        }
+
+        /* Dark mode: show sun icon (to switch to light) */
+        .theme-toggle .fa-sun { opacity: 1; transform: rotate(0deg); }
+        .theme-toggle .fa-moon { opacity: 0; transform: rotate(-90deg); }
+
+        /* Light mode: show moon icon (to switch to dark) */
+        body.light-mode .theme-toggle .fa-sun { opacity: 0; transform: rotate(90deg); }
+        body.light-mode .theme-toggle .fa-moon { opacity: 1; transform: rotate(0deg); }
+
+        * { box-sizing: border-box; }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            font-family: 'Outfit', sans-serif;
+            margin: 0;
+            padding: 0;
+            overflow-x: hidden;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        /* ==================== PAGE TRANSITIONS ==================== */
+        html { scroll-behavior: smooth; }
+
+        .page-wrapper {
+            animation: pageIn 0.45s ease both;
+        }
+
+        .page-wrapper.page-exit {
+            animation: pageOut 0.3s ease both;
+        }
+
+        @keyframes pageIn {
+            from { opacity: 0; transform: translateY(12px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes pageOut {
+            from { opacity: 1; transform: translateY(0); }
+            to { opacity: 0; transform: translateY(-8px); }
+        }
+
+        /* Top loading bar */
+        .page-loader {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--accent-primary), var(--accent-secondary));
+            z-index: 9999;
+            transition: width 0.3s ease;
+            box-shadow: 0 0 10px var(--accent-glow);
+        }
+
+        /* ==================== TOP NAVBAR ==================== */
+        .navbar-top {
+            background: rgba(10, 10, 11, 0.92);
+            transition: background 0.3s ease;
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--glass-border);
+            padding: 0.9rem 5%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .navbar-brand {
+            font-size: 1.8rem;
+            font-weight: 700;
+            background: linear-gradient(45deg, var(--accent-primary), var(--accent-secondary));
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-decoration: none;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 0.3rem;
+            align-items: center;
+            margin-left: 2rem;
+        }
+
+        .nav-link {
+            color: var(--text-muted);
+            text-decoration: none;
+            padding: 0.55rem 0.9rem;
+            border-radius: 12px;
+            font-size: 0.92rem;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+        }
+
+        .nav-link:hover {
+            background: var(--glass-bg);
+            color: var(--text-main);
+        }
+
+        .nav-link i {
+            font-size: 0.9rem;
+            color: var(--accent-primary);
+        }
+
+        /* Categories Dropdown */
+        .nav-dropdown {
+            position: relative;
+        }
+
+        .nav-dropdown-toggle {
+            color: var(--text-main);
+            text-decoration: none;
+            padding: 0.55rem 1rem;
+            border-radius: 12px;
+            font-size: 0.92rem;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: transparent;
+            border: none;
+            font-family: 'Outfit', sans-serif;
+        }
+
+        .nav-dropdown-toggle:hover,
+        .nav-dropdown.open .nav-dropdown-toggle {
+            background: var(--glass-bg);
+            color: var(--accent-primary);
+        }
+
+        .nav-dropdown-toggle .fa-chevron-down {
+            font-size: 0.65rem;
+            transition: transform 0.3s ease;
+        }
+
+        .nav-dropdown.open .nav-dropdown-toggle .fa-chevron-down {
+            transform: rotate(180deg);
+        }
+
+        .nav-dropdown-menu {
+            position: absolute;
+            top: calc(100% + 8px);
+            left: 50%;
+            transform: translateX(-50%) translateY(8px);
+            background: var(--surface-dark);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            padding: 0.5rem;
+            min-width: 220px;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            z-index: 1100;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.4);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+        }
+
+        .nav-dropdown.open .nav-dropdown-menu {
+            opacity: 1;
+            visibility: visible;
+            transform: translateX(-50%) translateY(0);
+        }
+
+        .nav-dropdown-menu a {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 0.7rem 1rem;
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 500;
+            border-radius: 10px;
+            transition: all 0.2s ease;
+        }
+
+        .nav-dropdown-menu a:hover {
+            background: var(--glass-bg);
+            color: var(--text-main);
+            transform: translateX(4px);
+        }
+
+        .nav-dropdown-menu a i {
+            width: 20px;
+            text-align: center;
+            font-size: 0.95rem;
+            color: var(--accent-primary);
+        }
+
+        .nav-dropdown-menu .dropdown-divider {
+            height: 1px;
+            background: var(--glass-border);
+            margin: 0.3rem 0.5rem;
+        }
+
+        .nav-icons {
+            display: flex;
+            gap: 0.6rem;
+            align-items: center;
+        }
+
+        .nav-icons a {
+            color: var(--text-main);
+            text-decoration: none;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 12px;
+            transition: all 0.3s ease;
+            background: transparent;
+        }
+
+        .nav-icons a:hover {
+            background: var(--glass-bg);
+            color: var(--accent-primary);
+            transform: scale(1.08);
+        }
+
+        .nav-icons i {
+            font-size: 1.1rem;
+        }
+
+        /* Dropdown hidden on mobile (handled in mobile nav instead) */
+        @media (max-width: 768px) {
+            .nav-links { display: none; }
+        }
+
+        /* Mobile hamburger */
+        .hamburger {
+            display: none;
+            flex-direction: column;
+            gap: 5px;
+            cursor: pointer;
+            padding: 5px;
+            z-index: 1001;
+        }
+        .hamburger span {
+            width: 25px;
+            height: 2px;
+            background: var(--text-main);
+            transition: all 0.3s ease;
+        }
+        .hamburger.active span:nth-child(1) { transform: rotate(45deg) translate(5px, 5px); }
+        .hamburger.active span:nth-child(2) { opacity: 0; }
+        .hamburger.active span:nth-child(3) { transform: rotate(-45deg) translate(5px, -5px); }
+
+        /* Mobile slide-out nav */
+        .mobile-nav {
+            position: fixed;
+            top: 0;
+            right: -100%;
+            width: 75%;
+            max-width: 320px;
+            height: 100vh;
+            background: var(--surface-dark);
+            flex-direction: column;
+            padding: 5rem 2rem 2rem;
+            gap: 0.5rem;
+            transition: right 0.4s ease;
+            z-index: 1000;
+            border-left: 1px solid var(--glass-border);
+            overflow-y: auto;
+            display: flex;
+        }
+        .mobile-nav.active { right: 0; }
+        .mobile-nav a {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 0.9rem 1.2rem;
+            color: var(--text-main);
+            text-decoration: none;
+            font-size: 1.05rem;
+            font-weight: 500;
+            border-radius: 12px;
+            transition: all 0.2s ease;
+        }
+        .mobile-nav a:hover {
+            background: var(--glass-bg);
+            color: var(--accent-primary);
+        }
+        .mobile-nav .nav-divider {
+            height: 1px;
+            background: var(--glass-border);
+            margin: 0.8rem 0;
+        }
+        .mobile-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 999;
+        }
+        .mobile-overlay.active { display: block; }
+
+        /* ==================== MAIN CONTENT ==================== */
+        .container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+            flex: 1;
+        }
+
+        /* ==================== BUTTONS ==================== */
+        .btn {
+            padding: 0.8rem 1.5rem;
+            border-radius: 10px;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            font-family: 'Outfit', sans-serif;
+            transition: all 0.3s ease;
+            text-decoration: none;
+        }
+
+        .btn-primary {
+            background: linear-gradient(45deg, var(--accent-primary), var(--accent-secondary));
+            color: white;
+        }
+
+        .btn-primary:hover {
+            box-shadow: 0 5px 20px var(--accent-glow);
+            transform: translateY(-2px);
+        }
+
+        /* ==================== FLASH MESSAGES ==================== */
+        .alert {
+            padding: 1rem 1.5rem;
+            border-radius: 12px;
+            margin-bottom: 1.5rem;
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            animation: slideDown 0.4s ease;
+            position: relative;
+        }
+
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-15px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .alert-success { border-left: 4px solid var(--success); }
+        .alert-success::before { content: '\f058'; font-family: 'Font Awesome 6 Free'; font-weight: 900; color: var(--success); }
+        .alert-danger { border-left: 4px solid var(--danger); }
+        .alert-danger::before { content: '\f057'; font-family: 'Font Awesome 6 Free'; font-weight: 900; color: var(--danger); }
+        .alert-warning { border-left: 4px solid var(--warning); }
+        .alert-warning::before { content: '\f071'; font-family: 'Font Awesome 6 Free'; font-weight: 900; color: var(--warning); }
+        .alert-info { border-left: 4px solid var(--info); }
+        .alert-info::before { content: '\f05a'; font-family: 'Font Awesome 6 Free'; font-weight: 900; color: var(--info); }
+
+        .alert-dismiss {
+            margin-left: auto;
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            font-size: 1rem;
+            padding: 0;
+        }
+
+        /* ==================== FOOTER ==================== */
+        .footer {
+            background: var(--surface-dark);
+            border-top: 1px solid var(--glass-border);
+            padding: 3rem 5% 2rem;
+            margin-top: auto;
+        }
+
+        .footer-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr 1fr;
+            gap: 3rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .footer-brand {
+            font-size: 1.5rem;
+            font-weight: 700;
+            background: linear-gradient(45deg, var(--accent-primary), var(--accent-secondary));
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 0.8rem;
+        }
+
+        .footer-section h4 {
+            color: var(--text-main);
+            margin-bottom: 1rem;
+            font-weight: 600;
+        }
+
+        .footer-section a {
+            display: block;
+            color: var(--text-muted);
+            text-decoration: none;
+            margin-bottom: 0.5rem;
+            font-size: 0.9rem;
+            transition: color 0.3s ease;
+        }
+
+        .footer-section a:hover {
+            color: var(--accent-primary);
+        }
+
+        .footer-bottom {
+            text-align: center;
+            padding-top: 2rem;
+            margin-top: 2rem;
+            border-top: 1px solid var(--glass-border);
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            max-width: 1200px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        /* ==================== RESPONSIVE ==================== */
+        @media (max-width: 768px) {
+            .hamburger { display: flex; }
+
+            .footer-grid {
+                grid-template-columns: 1fr 1fr;
+                gap: 2rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .footer-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <!-- ===== Top Navbar ===== -->
+    <nav class="navbar-top">
+        <a href="{{ url_for('shop.home') }}" class="navbar-brand">AuxyysKart</a>
+
+        <!-- Left-side nav links (desktop) -->
+        <div class="nav-links">
+            <a href="{{ url_for('shop.home') }}" class="nav-link"><i class="fas fa-home"></i> Home</a>
+            {% if current_user.is_authenticated %}
+            <a href="{{ url_for('shop.cart') }}" class="nav-link"><i class="fas fa-shopping-cart"></i> Cart</a>
+            <a href="{{ url_for('shop.wishlist') }}" class="nav-link"><i class="fas fa-heart"></i> Wishlist</a>
+            <a href="{{ url_for('shop.order_history') }}" class="nav-link"><i class="fas fa-receipt"></i> My Orders</a>
+            <a href="{{ url_for('shop.addresses') }}" class="nav-link"><i class="fas fa-map-marker-alt"></i> Addresses</a>
+            {% endif %}
+        </div>
+
+        <!-- Right-side icons -->
+        <div class="nav-icons">
+            <a href="{{ url_for('shop.search') }}" title="Search"><i class="fas fa-search"></i></a>
+            {% if current_user.is_authenticated %}
+                {% if current_user.is_admin %}
+                <a href="{{ url_for('admin.dashboard') }}" title="Admin"><i class="fas fa-user-shield"></i></a>
+                {% endif %}
+                <a href="{{ url_for('auth.logout') }}" title="Logout"><i class="fas fa-sign-out-alt"></i></a>
+            {% else %}
+                <a href="{{ url_for('auth.login') }}" title="Login"><i class="fas fa-user"></i></a>
+            {% endif %}
+            <button class="theme-toggle" id="themeToggle" title="Toggle Dark/Light Mode">
+                <i class="fas fa-sun"></i>
+                <i class="fas fa-moon"></i>
+            </button>
+        </div>
+        <div class="hamburger" id="hamburger" onclick="toggleMobileNav()">
+            <span></span><span></span><span></span>
+        </div>
+    </nav>
+
+
+
+    <!-- ===== Mobile Slide-out Nav ===== -->
+    <div class="mobile-overlay" id="mobileOverlay" onclick="toggleMobileNav()"></div>
+    <div class="mobile-nav" id="mobileNav">
+        <a href="{{ url_for('shop.home') }}"><i class="fas fa-home"></i> Home</a>
+        <div class="nav-divider"></div>
+        <a href="{{ url_for('shop.category', category_name='Clothings') }}"><i class="fas fa-tshirt"></i> Clothings</a>
+        <a href="{{ url_for('shop.category', category_name='Sneakers') }}"><i class="fas fa-shoe-prints"></i> Sneakers</a>
+        <a href="{{ url_for('shop.category', category_name='Fashion') }}"><i class="fas fa-gem"></i> Fashion</a>
+        <a href="{{ url_for('shop.category', category_name='Groceries') }}"><i class="fas fa-apple-alt"></i> Groceries</a>
+        <a href="{{ url_for('shop.category', category_name='Vegetables') }}"><i class="fas fa-carrot"></i> Vegetables</a>
+        <a href="{{ url_for('shop.category', category_name='Electronics') }}"><i class="fas fa-headphones"></i> Electronics</a>
+        <a href="{{ url_for('shop.category', category_name='Basic Needs') }}"><i class="fas fa-shopping-basket"></i> Basic Needs</a>
+        <a href="{{ url_for('shop.category', category_name='Kids') }}"><i class="fas fa-child"></i> Kids</a>
+        <div class="nav-divider"></div>
+        <a href="{{ url_for('shop.search') }}"><i class="fas fa-search"></i> Search</a>
+        {% if current_user.is_authenticated %}
+            <a href="{{ url_for('shop.cart') }}"><i class="fas fa-shopping-cart"></i> My Cart</a>
+            <a href="{{ url_for('shop.wishlist') }}"><i class="fas fa-heart"></i> Wishlist</a>
+            <a href="{{ url_for('shop.order_history') }}"><i class="fas fa-receipt"></i> Orders</a>
+            <a href="{{ url_for('shop.addresses') }}"><i class="fas fa-map-marker-alt"></i> Addresses</a>
+            <a href="{{ url_for('auth.logout') }}"><i class="fas fa-sign-out-alt"></i> Logout</a>
+        {% else %}
+            <a href="{{ url_for('auth.login') }}"><i class="fas fa-user"></i> Login</a>
+            <a href="{{ url_for('auth.register') }}"><i class="fas fa-user-plus"></i> Register</a>
+        {% endif %}
+    </div>
+
+    <div class="page-wrapper" id="pageWrapper">
+    <div class="container">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}" id="alert-{{ loop.index }}">
+                        {{ message }}
+                        <button class="alert-dismiss" onclick="this.parentElement.style.display='none';">&times;</button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        {% block content %}{% endblock %}
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-grid">
+            <div class="footer-section">
+                <div class="footer-brand">AuxyysKart</div>
+                <p style="color: var(--text-muted); font-size: 0.9rem; line-height: 1.6;">Your premium destination for clothing, sneakers, fashion, groceries, and electronics. Shop with confidence.</p>
+            </div>
+            <div class="footer-section">
+                <h4>Categories</h4>
+                <a href="{{ url_for('shop.category', category_name='Clothings') }}">Clothings</a>
+                <a href="{{ url_for('shop.category', category_name='Sneakers') }}">Sneakers</a>
+                <a href="{{ url_for('shop.category', category_name='Fashion') }}">Fashion</a>
+                <a href="{{ url_for('shop.category', category_name='Groceries') }}">Groceries</a>
+                <a href="{{ url_for('shop.category', category_name='Vegetables') }}">Vegetables</a>
+                <a href="{{ url_for('shop.category', category_name='Electronics') }}">Electronics</a>
+                <a href="{{ url_for('shop.category', category_name='Basic Needs') }}">Basic Needs</a>
+                <a href="{{ url_for('shop.category', category_name='Kids') }}">Kids</a>
+            </div>
+            <div class="footer-section">
+                <h4>Account</h4>
+                {% if current_user.is_authenticated %}
+                <a href="{{ url_for('shop.cart') }}">My Cart</a>
+                <a href="{{ url_for('shop.wishlist') }}">Wishlist</a>
+                <a href="{{ url_for('shop.order_history') }}">Order History</a>
+                <a href="{{ url_for('shop.addresses') }}">My Addresses</a>
+                <a href="{{ url_for('auth.logout') }}">Logout</a>
+                {% else %}
+                <a href="{{ url_for('auth.login') }}">Login</a>
+                <a href="{{ url_for('auth.register') }}">Register</a>
+                {% endif %}
+            </div>
+            <div class="footer-section">
+                <h4>Connect</h4>
+                <a href="#"><i class="fab fa-twitter" style="margin-right: 8px;"></i>Twitter</a>
+                <a href="#"><i class="fab fa-instagram" style="margin-right: 8px;"></i>Instagram</a>
+                <a href="#"><i class="fab fa-github" style="margin-right: 8px;"></i>GitHub</a>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            &copy; 2026 AuxyysKart. Built with <i class="fas fa-heart" style="color: var(--accent-primary);"></i> by Akash.
+        </div>
+    </footer>
+    </div> <!-- end page-wrapper -->
+
+    <!-- Loading bar element -->
+    <div class="page-loader" id="pageLoader" style="width: 0;"></div>
+
+    <!-- Prevent flash of wrong theme -->
+    <script>
+        (function() {
+            var theme = localStorage.getItem('auxyyskart-theme');
+            if (theme === 'light') {
+                document.body.classList.add('light-mode');
+            }
+        })();
+    </script>
+
+    <script>
+        // Auto-dismiss flash messages after 5 seconds
+        document.querySelectorAll('.alert').forEach(function(alert) {
+            setTimeout(function() {
+                alert.style.transition = 'opacity 0.4s ease, transform 0.4s ease';
+                alert.style.opacity = '0';
+                alert.style.transform = 'translateY(-10px)';
+                setTimeout(function() { alert.style.display = 'none'; }, 400);
+            }, 5000);
+        });
+
+        // Mobile nav toggle
+        function toggleMobileNav() {
+            document.getElementById('mobileNav').classList.toggle('active');
+            document.getElementById('mobileOverlay').classList.toggle('active');
+            document.getElementById('hamburger').classList.toggle('active');
+        }
+
+        // Categories dropdown - hover on desktop, click toggle
+        (function() {
+            var dropdown = document.getElementById('categoryDropdown');
+            if (!dropdown) return;
+            var toggle = dropdown.querySelector('.nav-dropdown-toggle');
+            var timeout;
+
+            // Desktop: hover
+            dropdown.addEventListener('mouseenter', function() {
+                clearTimeout(timeout);
+                dropdown.classList.add('open');
+                toggle.setAttribute('aria-expanded', 'true');
+            });
+            dropdown.addEventListener('mouseleave', function() {
+                timeout = setTimeout(function() {
+                    dropdown.classList.remove('open');
+                    toggle.setAttribute('aria-expanded', 'false');
+                }, 200);
+            });
+
+            // Click toggle (for touch devices)
+            toggle.addEventListener('click', function(e) {
+                e.preventDefault();
+                dropdown.classList.toggle('open');
+                var expanded = dropdown.classList.contains('open');
+                toggle.setAttribute('aria-expanded', expanded);
+            });
+
+            // Close when clicking outside
+            document.addEventListener('click', function(e) {
+                if (!dropdown.contains(e.target)) {
+                    dropdown.classList.remove('open');
+                    toggle.setAttribute('aria-expanded', 'false');
+                }
+            });
+        })();
+
+        // Theme toggle
+        (function() {
+            var toggle = document.getElementById('themeToggle');
+            if (!toggle) return;
+
+            toggle.addEventListener('click', function() {
+                document.body.classList.toggle('light-mode');
+                var isLight = document.body.classList.contains('light-mode');
+                localStorage.setItem('auxyyskart-theme', isLight ? 'light' : 'dark');
+            });
+        })();
+
+        // ==================== SMOOTH PAGE TRANSITIONS ====================
+        (function() {
+            var wrapper = document.getElementById('pageWrapper');
+            var loader = document.getElementById('pageLoader');
+            if (!wrapper) return;
+
+            // Intercept all internal link clicks for smooth transition
+            document.addEventListener('click', function(e) {
+                var link = e.target.closest('a');
+                if (!link) return;
+
+                var href = link.getAttribute('href');
+                // Skip: external links, anchors, js:, no href, new tabs, form submits
+                if (!href || href.startsWith('#') || href.startsWith('javascript') ||
+                    href.startsWith('http') || link.target === '_blank' ||
+                    link.hasAttribute('download')) return;
+
+                e.preventDefault();
+
+                // Show loading bar
+                loader.style.width = '0';
+                loader.style.display = 'block';
+                setTimeout(function() { loader.style.width = '70%'; }, 10);
+
+                // Fade out current page
+                wrapper.classList.add('page-exit');
+
+                // Navigate after animation
+                setTimeout(function() {
+                    loader.style.width = '100%';
+                    window.location.href = href;
+                }, 280);
+            });
+
+            // Handle browser back/forward
+            window.addEventListener('pageshow', function(e) {
+                if (e.persisted) {
+                    wrapper.classList.remove('page-exit');
+                    loader.style.width = '0';
+                }
+            });
+        })();
+    </script>
+</body>
+</html>

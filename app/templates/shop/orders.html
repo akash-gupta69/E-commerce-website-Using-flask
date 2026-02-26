@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+{% block content %}
+<style>
+    .orders-header {
+        margin-bottom: 2rem;
+    }
+    .order-card {
+        background: var(--surface-dark);
+        border: 1px solid var(--glass-border);
+        border-radius: 15px;
+        padding: 1.5rem 2rem;
+        margin-bottom: 1.5rem;
+        transition: all 0.3s ease;
+        animation: fadeUp 0.4s ease;
+    }
+    @keyframes fadeUp {
+        from { opacity: 0; transform: translateY(15px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    .order-card:hover {
+        border-color: var(--accent-primary);
+    }
+    .order-card[style] {
+        animation-delay: var(--delay, 0s);
+    }
+    .order-top {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1rem;
+    }
+    .order-id {
+        font-size: 1.2rem;
+        font-weight: 700;
+    }
+    .order-status {
+        padding: 0.3rem 1rem;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        font-weight: 600;
+    }
+    .status-pending { background: rgba(255, 193, 7, 0.15); color: #ffc107; }
+    .status-shipped { background: rgba(33, 150, 243, 0.15); color: #2196f3; }
+    .status-delivered { background: rgba(76, 175, 80, 0.15); color: #4caf50; }
+    .status-cancelled { background: rgba(244, 67, 54, 0.15); color: #f44336; }
+    .order-meta {
+        display: flex;
+        gap: 2rem;
+        color: var(--text-muted);
+        font-size: 0.9rem;
+    }
+    .order-meta span i {
+        margin-right: 5px;
+    }
+    .order-items-preview {
+        margin-top: 1rem;
+        padding-top: 1rem;
+        border-top: 1px solid var(--glass-border);
+        color: var(--text-muted);
+        font-size: 0.9rem;
+    }
+    .empty-orders {
+        text-align: center;
+        padding: 5rem;
+    }
+    .empty-orders i {
+        font-size: 4rem;
+        color: var(--text-muted);
+        margin-bottom: 1.5rem;
+    }
+</style>
+
+{% include "shop/_account_tabs.html" %}
+
+{% if orders %}
+    {% for order in orders %}
+    <div class="order-card" style="--delay: {{ loop.index0 * 0.1 }}s;">
+        <div class="order-top">
+            <span class="order-id">Order #{{ order.id }}</span>
+            <span class="order-status status-{{ order.status|lower }}">{{ order.status }}</span>
+        </div>
+        <div class="order-meta">
+            <span><i class="fas fa-calendar"></i> {{ order.order_date.strftime('%b %d, %Y') }}</span>
+            <span><i class="fas fa-box"></i> {{ order.items|length }} item{{ 's' if order.items|length != 1 }}</span>
+            <span><i class="fas fa-rupee-sign"></i> {{ "%.2f"|format(order.total_amount) }}</span>
+        </div>
+        <div class="order-items-preview">
+            {% for item in order.items[:3] %}
+                Product #{{ item.product_id }} (×{{ item.quantity }}){{ ', ' if not loop.last }}
+            {% endfor %}
+            {% if order.items|length > 3 %}
+                ...and {{ order.items|length - 3 }} more
+            {% endif %}
+        </div>
+    </div>
+    {% endfor %}
+{% else %}
+<div class="empty-orders">
+    <i class="fas fa-receipt"></i>
+    <h2>No orders yet</h2>
+    <p style="color: var(--text-muted); margin-bottom: 1.5rem;">Once you make a purchase, your orders will appear here.</p>
+    <a href="{{ url_for('shop.home') }}" class="btn btn-primary">Start Shopping</a>
+</div>
+{% endif %}
+{% endblock %}

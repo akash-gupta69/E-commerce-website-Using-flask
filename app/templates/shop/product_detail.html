@@ -1,0 +1,417 @@
+{% extends "base.html" %}
+{% block content %}
+<style>
+    .product-container {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 4rem;
+        margin-top: 2rem;
+        animation: fadeUp 0.5s ease;
+    }
+    @keyframes fadeUp {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    .product-image {
+        width: 100%;
+        border-radius: 20px;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+        background: var(--surface-dark);
+        transition: transform 0.3s ease;
+    }
+    .product-image:hover {
+        transform: scale(1.02);
+    }
+    .product-info h1 {
+        font-size: 2.5rem;
+        margin-bottom: 1rem;
+    }
+    .product-price {
+        font-size: 2.2rem;
+        background: linear-gradient(45deg, var(--accent-primary), var(--accent-secondary));
+        -webkit-background-clip: text;
+        background-clip: text;
+        -webkit-text-fill-color: transparent;
+        font-weight: 700;
+        margin-bottom: 1.5rem;
+    }
+    .product-description {
+        font-size: 1.05rem;
+        line-height: 1.7;
+        color: var(--text-muted);
+        margin-bottom: 2rem;
+    }
+    .stock-status {
+        margin-bottom: 1.5rem;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    .in-stock { color: #4caf50; }
+    .out-of-stock { color: #f44336; }
+    .product-meta {
+        display: flex;
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+    .meta-tag {
+        padding: 0.4rem 1rem;
+        border: 1px solid var(--glass-border);
+        border-radius: 20px;
+        font-size: 0.85rem;
+        color: var(--text-muted);
+    }
+    .action-buttons {
+        display: flex;
+        gap: 1rem;
+        align-items: center;
+        flex-wrap: wrap;
+    }
+    .add-to-cart-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        padding: 1rem 3rem;
+        font-size: 1.1rem;
+        border: none;
+        border-radius: 12px;
+        background: linear-gradient(45deg, var(--accent-primary), var(--accent-secondary));
+        color: white;
+        font-weight: 600;
+        cursor: pointer;
+        text-decoration: none;
+        font-family: 'Outfit', sans-serif;
+        transition: all 0.3s ease;
+    }
+    .add-to-cart-btn:hover {
+        box-shadow: 0 8px 25px rgba(157, 80, 187, 0.4);
+        transform: translateY(-3px);
+    }
+    .disabled-btn {
+        background: var(--surface-dark) !important;
+        color: var(--text-muted) !important;
+        cursor: not-allowed;
+        box-shadow: none !important;
+        transform: none !important;
+    }
+    .wishlist-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 50px;
+        height: 50px;
+        border-radius: 12px;
+        border: 1px solid var(--glass-border);
+        background: var(--glass-bg);
+        color: var(--text-muted);
+        font-size: 1.2rem;
+        text-decoration: none;
+        transition: all 0.3s ease;
+    }
+    .wishlist-btn:hover {
+        color: #ff4081;
+        border-color: #ff4081;
+        transform: scale(1.1);
+    }
+    .wishlist-btn.active {
+        color: #ff4081;
+        border-color: #ff4081;
+        background: rgba(255, 64, 129, 0.1);
+    }
+
+    /* ===== Rating Display ===== */
+    .rating-summary {
+        display: flex;
+        align-items: center;
+        gap: 0.8rem;
+        margin-bottom: 1.5rem;
+        padding: 0.8rem 1.2rem;
+        background: var(--glass-bg);
+        border: 1px solid var(--glass-border);
+        border-radius: 12px;
+        width: fit-content;
+    }
+    .stars { color: #ffc107; font-size: 1.1rem; letter-spacing: 2px; }
+    .stars .empty { color: var(--text-muted); opacity: 0.3; }
+    .rating-number { font-size: 1.3rem; font-weight: 700; }
+    .review-count { color: var(--text-muted); font-size: 0.9rem; }
+
+    /* ===== Reviews Section ===== */
+    .reviews-section {
+        margin-top: 4rem;
+        grid-column: 1 / -1;
+    }
+    .reviews-section h2 {
+        font-size: 1.6rem;
+        margin-bottom: 2rem;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    .reviews-section h2 i { color: var(--accent-primary); }
+
+    /* Review Form */
+    .review-form-card {
+        background: var(--surface-dark);
+        border: 1px solid var(--glass-border);
+        border-radius: 16px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+    }
+    .star-picker {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 1rem;
+    }
+    .star-picker input[type="radio"] { display: none; }
+    .star-picker label {
+        font-size: 1.8rem;
+        color: var(--text-muted);
+        cursor: pointer;
+        transition: all 0.2s;
+        opacity: 0.3;
+    }
+    .star-picker label:hover,
+    .star-picker label:hover ~ label,
+    .star-picker input:checked ~ label {
+        color: #ffc107;
+        opacity: 1;
+    }
+    /* Reverse order trick for CSS-only star hover */
+    .star-picker {
+        flex-direction: row-reverse;
+        justify-content: flex-end;
+    }
+    .star-picker label:hover ~ label,
+    .star-picker input:checked + label,
+    .star-picker input:checked + label ~ label {
+        color: #ffc107;
+        opacity: 1;
+    }
+    .star-picker label:hover,
+    .star-picker label:hover ~ label {
+        color: #ffc107;
+        opacity: 1;
+    }
+
+    .review-textarea {
+        width: 100%;
+        min-height: 100px;
+        padding: 1rem;
+        background: var(--bg-dark);
+        border: 1px solid var(--glass-border);
+        border-radius: 10px;
+        color: var(--text-main);
+        font-family: 'Outfit', sans-serif;
+        font-size: 0.95rem;
+        resize: vertical;
+        margin-bottom: 1rem;
+        transition: border-color 0.3s;
+    }
+    .review-textarea:focus {
+        outline: none;
+        border-color: var(--accent-primary);
+    }
+
+    /* Review List */
+    .review-card {
+        background: var(--surface-dark);
+        border: 1px solid var(--glass-border);
+        border-radius: 14px;
+        padding: 1.5rem;
+        margin-bottom: 1rem;
+    }
+    .review-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 0.6rem;
+    }
+    .review-user {
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
+    }
+    .review-user .avatar {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        background: linear-gradient(45deg, var(--accent-primary), var(--accent-secondary));
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.8rem;
+        font-weight: 700;
+        color: white;
+    }
+    .review-date {
+        color: var(--text-muted);
+        font-size: 0.8rem;
+    }
+    .review-stars { color: #ffc107; font-size: 0.9rem; margin-bottom: 0.5rem; }
+    .review-comment {
+        color: var(--text-muted);
+        font-size: 0.95rem;
+        line-height: 1.6;
+    }
+    .delete-review-btn {
+        background: none;
+        border: 1px solid var(--glass-border);
+        color: var(--text-muted);
+        padding: 0.3rem 0.8rem;
+        border-radius: 6px;
+        font-size: 0.78rem;
+        cursor: pointer;
+        font-family: 'Outfit', sans-serif;
+        transition: all 0.2s;
+    }
+    .delete-review-btn:hover { color: #f44336; border-color: #f44336; }
+
+    .no-reviews {
+        text-align: center;
+        padding: 2rem;
+        color: var(--text-muted);
+    }
+
+    @media (max-width: 768px) {
+        .product-container {
+            grid-template-columns: 1fr;
+            gap: 2rem;
+        }
+        .product-info h1 { font-size: 1.8rem; }
+    }
+</style>
+
+<div class="product-container">
+    <div>
+        <img src="{{ product.image_url if product.image_url else url_for('static', filename='product_pics/' + product.image_file) }}" alt="{{ product.name }}" class="product-image" onerror="this.src='https://via.placeholder.com/500x400/161618/9d50bb?text={{ product.name|urlencode }}'">
+    </div>
+    <div class="product-info">
+        <div class="product-meta">
+            <span class="meta-tag"><i class="fas fa-tag" style="margin-right: 5px;"></i>{{ product.category }}</span>
+            <span class="meta-tag"><i class="fas fa-box" style="margin-right: 5px;"></i>{{ product.stock }} in stock</span>
+        </div>
+        <h1>{{ product.name }}</h1>
+
+        <!-- Average Rating -->
+        {% if reviews %}
+        <div class="rating-summary">
+            <span class="rating-number">{{ avg_rating }}</span>
+            <span class="stars">
+                {% for i in range(1, 6) %}
+                    {% if avg_rating >= i %}
+                        <i class="fas fa-star"></i>
+                    {% elif avg_rating >= i - 0.5 %}
+                        <i class="fas fa-star-half-alt"></i>
+                    {% else %}
+                        <i class="far fa-star empty"></i>
+                    {% endif %}
+                {% endfor %}
+            </span>
+            <span class="review-count">({{ reviews|length }} review{{ 's' if reviews|length != 1 }})</span>
+        </div>
+        {% endif %}
+
+        <div class="product-price">₹{{ "%.2f"|format(product.price) }}</div>
+
+        <div class="stock-status {{ 'in-stock' if product.stock > 0 else 'out-of-stock' }}">
+            <i class="fas {{ 'fa-check-circle' if product.stock > 0 else 'fa-times-circle' }}"></i>
+            {{ 'In Stock' if product.stock > 0 else 'Out of Stock' }}
+        </div>
+
+        <div class="product-description">
+            {{ product.description }}
+        </div>
+
+        <div class="action-buttons">
+            {% if product.stock > 0 %}
+                <a href="{{ url_for('shop.add_to_cart', product_id=product.id) }}" class="add-to-cart-btn">
+                    <i class="fas fa-shopping-cart"></i> Add to Cart
+                </a>
+            {% else %}
+                <button class="add-to-cart-btn disabled-btn" disabled>
+                    <i class="fas fa-ban"></i> Sold Out
+                </button>
+            {% endif %}
+
+            {% if current_user.is_authenticated %}
+                {% if in_wishlist %}
+                    <a href="{{ url_for('shop.remove_from_wishlist', product_id=product.id) }}" class="wishlist-btn active" title="Remove from Wishlist">
+                        <i class="fas fa-heart"></i>
+                    </a>
+                {% else %}
+                    <a href="{{ url_for('shop.add_to_wishlist', product_id=product.id) }}" class="wishlist-btn" title="Add to Wishlist">
+                        <i class="far fa-heart"></i>
+                    </a>
+                {% endif %}
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- ===== REVIEWS SECTION ===== -->
+    <div class="reviews-section">
+        <h2><i class="fas fa-star"></i> Customer Reviews</h2>
+
+        {% if current_user.is_authenticated and not user_review %}
+        <div class="review-form-card">
+            <h3 style="margin-bottom: 1rem; font-size: 1.1rem;">Write a Review</h3>
+            <form action="{{ url_for('shop.submit_review', product_id=product.id) }}" method="POST">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                <div class="star-picker">
+                    {% for i in range(5, 0, -1) %}
+                    <input type="radio" name="rating" id="star{{ i }}" value="{{ i }}" required>
+                    <label for="star{{ i }}"><i class="fas fa-star"></i></label>
+                    {% endfor %}
+                </div>
+                <textarea name="comment" class="review-textarea" placeholder="Share your experience with this product... (optional)"></textarea>
+                <button type="submit" class="btn btn-primary" style="padding: 0.7rem 2rem;">
+                    <i class="fas fa-paper-plane" style="margin-right: 6px;"></i>Submit Review
+                </button>
+            </form>
+        </div>
+        {% elif not current_user.is_authenticated %}
+        <div class="review-form-card" style="text-align: center;">
+            <p style="color: var(--text-muted);"><a href="{{ url_for('auth.login') }}" style="color: var(--accent-primary); text-decoration: none; font-weight: 600;">Login</a> to write a review.</p>
+        </div>
+        {% endif %}
+
+        {% if reviews %}
+            {% for review in reviews %}
+            <div class="review-card">
+                <div class="review-header">
+                    <div class="review-user">
+                        <span class="avatar">{{ review.user.username[0]|upper }}</span>
+                        {{ review.user.username }}
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 0.8rem;">
+                        <span class="review-date">{{ review.created_at.strftime('%b %d, %Y') }}</span>
+                        {% if current_user.is_authenticated and review.user_id == current_user.id %}
+                        <form action="{{ url_for('shop.delete_review', review_id=review.id) }}" method="POST" style="display:inline;">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                            <button type="submit" class="delete-review-btn" onclick="return confirm('Delete your review?')">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </form>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="review-stars">
+                    {% for i in range(review.rating) %}<i class="fas fa-star"></i>{% endfor %}
+                    {% for i in range(5 - review.rating) %}<i class="far fa-star" style="opacity: 0.3;"></i>{% endfor %}
+                </div>
+                {% if review.comment %}
+                <div class="review-comment">{{ review.comment }}</div>
+                {% endif %}
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="no-reviews">
+                <i class="far fa-comment-dots" style="font-size: 2.5rem; display: block; margin-bottom: 0.8rem;"></i>
+                No reviews yet. Be the first to review this product!
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

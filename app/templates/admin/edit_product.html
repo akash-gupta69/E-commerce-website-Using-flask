@@ -1,0 +1,130 @@
+{% extends "base.html" %}
+{% block content %}
+<style>
+    .form-container {
+        max-width: 600px;
+        margin: 2rem auto;
+    }
+    .form-card {
+        background: var(--surface-dark);
+        border: 1px solid var(--glass-border);
+        border-radius: 20px;
+        padding: 3rem;
+        animation: fadeUp 0.4s ease;
+    }
+    @keyframes fadeUp {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    .form-card h1 {
+        margin-bottom: 2rem;
+    }
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+    .form-group label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-weight: 500;
+        color: var(--text-muted);
+    }
+    .form-control {
+        width: 100%;
+        padding: 0.85rem 1rem;
+        background: var(--bg-dark);
+        border: 1px solid var(--glass-border);
+        border-radius: 10px;
+        color: var(--text-main);
+        font-family: 'Outfit', sans-serif;
+        font-size: 1rem;
+        transition: border-color 0.3s ease;
+        box-sizing: border-box;
+    }
+    .form-control:focus {
+        outline: none;
+        border-color: var(--accent-primary);
+        box-shadow: 0 0 0 3px rgba(157, 80, 187, 0.15);
+    }
+    textarea.form-control {
+        min-height: 120px;
+        resize: vertical;
+    }
+    select.form-control {
+        appearance: none;
+        cursor: pointer;
+    }
+    .form-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1.5rem;
+    }
+    .form-hint {
+        font-size: 0.8rem;
+        color: var(--text-muted);
+        margin-top: 0.3rem;
+    }
+    .img-preview {
+        margin-top: 0.5rem;
+        width: 100%;
+        max-height: 200px;
+        object-fit: cover;
+        border-radius: 10px;
+        background: var(--bg-dark);
+    }
+</style>
+
+<div class="form-container">
+    <a href="{{ url_for('admin.dashboard') }}" style="color: var(--accent-primary); text-decoration: none; display: inline-block; margin-bottom: 1rem;">
+        <i class="fas fa-arrow-left" style="margin-right: 8px;"></i> Back to Dashboard
+    </a>
+    <div class="form-card">
+        <h1><i class="fas fa-edit" style="color: var(--accent-primary); margin-right: 10px;"></i>Edit Product</h1>
+        
+        <form method="POST" action="{{ url_for('admin.edit_product', product_id=product.id) }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+            <div class="form-group">
+                <label for="name">Product Name</label>
+                <input type="text" id="name" name="name" class="form-control" value="{{ product.name }}" required>
+            </div>
+            <div class="form-group">
+                <label for="description">Description</label>
+                <textarea id="description" name="description" class="form-control" required>{{ product.description }}</textarea>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="price">Price ($)</label>
+                    <input type="number" id="price" name="price" class="form-control" step="0.01" min="0" value="{{ product.price }}" required>
+                </div>
+                <div class="form-group">
+                    <label for="stock">Stock Quantity</label>
+                    <input type="number" id="stock" name="stock" class="form-control" min="0" value="{{ product.stock }}" required>
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="category">Category</label>
+                <select id="category" name="category" class="form-control" required>
+                    <option value="Clothings" {{ 'selected' if product.category == 'Clothings' }}>Clothings</option>
+                    <option value="Sneakers" {{ 'selected' if product.category == 'Sneakers' }}>Sneakers</option>
+                    <option value="Fashion" {{ 'selected' if product.category == 'Fashion' }}>Fashion</option>
+                    <option value="Groceries" {{ 'selected' if product.category == 'Groceries' }}>Groceries</option>
+                    <option value="Vegetables" {{ 'selected' if product.category == 'Vegetables' }}>Vegetables</option>
+                    <option value="Electronics" {{ 'selected' if product.category == 'Electronics' }}>Electronics</option>
+                    <option value="Basic Needs" {{ 'selected' if product.category == 'Basic Needs' }}>Basic Needs</option>
+                    <option value="Kids" {{ 'selected' if product.category == 'Kids' }}>Kids</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="image_url">Image URL</label>
+                <input type="url" id="image_url" name="image_url" class="form-control" value="{{ product.image_url or '' }}" placeholder="https://example.com/image.jpg">
+                <p class="form-hint">Paste an external image URL. Leave blank to use default.</p>
+                {% if product.image_url %}
+                <img src="{{ product.image_url }}" alt="Preview" class="img-preview" onerror="this.style.display='none'">
+                {% endif %}
+            </div>
+            <button type="submit" class="btn btn-primary" style="width: 100%; padding: 1rem; font-size: 1.05rem;">
+                <i class="fas fa-save" style="margin-right: 8px;"></i> Save Changes
+            </button>
+        </form>
+    </div>
+</div>
+{% endblock %}

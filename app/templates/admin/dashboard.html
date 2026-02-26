@@ -1,0 +1,582 @@
+{% extends "base.html" %}
+{% block content %}
+<style>
+    .admin-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 2rem;
+    }
+    .admin-stats {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 3rem;
+    }
+    .stat-card {
+        background: var(--surface-dark);
+        padding: 2rem;
+        border-radius: 16px;
+        border: 1px solid var(--glass-border);
+        text-align: center;
+        transition: all 0.3s ease;
+    }
+    .stat-card:hover {
+        border-color: var(--accent-primary);
+        transform: translateY(-3px);
+    }
+    .stat-card h3 {
+        color: var(--text-muted);
+        font-size: 0.85rem;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        margin-bottom: 0.5rem;
+    }
+    .stat-card .value {
+        font-size: 2.5rem;
+        font-weight: 700;
+        background: linear-gradient(45deg, var(--accent-primary), var(--accent-secondary));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        color: transparent;
+    }
+    .stat-card .stat-icon {
+        margin-bottom: 0.5rem;
+        font-size: 1.3rem;
+        color: var(--accent-primary);
+    }
+
+    /* Tab Navigation */
+    .admin-tabs {
+        display: flex;
+        gap: 0;
+        margin-bottom: 2rem;
+        border-bottom: 2px solid var(--glass-border);
+    }
+    .admin-tab {
+        padding: 0.8rem 1.5rem;
+        cursor: pointer;
+        color: var(--text-muted);
+        font-weight: 600;
+        font-size: 0.95rem;
+        border-bottom: 2px solid transparent;
+        margin-bottom: -2px;
+        transition: all 0.3s ease;
+        background: none;
+        border-top: none;
+        border-left: none;
+        border-right: none;
+        font-family: 'Outfit', sans-serif;
+    }
+    .admin-tab:hover { color: var(--text-main); }
+    .admin-tab.active {
+        color: var(--accent-primary);
+        border-bottom-color: var(--accent-primary);
+    }
+    .admin-tab i { margin-right: 8px; }
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+
+    /* Tables */
+    .admin-table {
+        width: 100%;
+        border-collapse: collapse;
+        background: var(--surface-dark);
+        border-radius: 16px;
+        overflow: hidden;
+        border: 1px solid var(--glass-border);
+    }
+    .admin-table th, .admin-table td {
+        padding: 1rem 1.2rem;
+        text-align: left;
+        border-bottom: 1px solid var(--glass-border);
+    }
+    .admin-table th {
+        background: rgba(255,255,255,0.03);
+        color: var(--text-muted);
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+    .admin-table tr:hover {
+        background: rgba(255,255,255,0.02);
+    }
+    .product-thumb {
+        width: 50px;
+        height: 50px;
+        border-radius: 8px;
+        object-fit: cover;
+        background: var(--bg-dark);
+    }
+    .product-info-cell {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+    .product-info-cell .name {
+        font-weight: 600;
+        font-size: 0.95rem;
+    }
+    .category-badge {
+        padding: 0.2rem 0.7rem;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        background: var(--glass-bg);
+        border: 1px solid var(--glass-border);
+        color: var(--text-muted);
+    }
+    .action-btns {
+        display: flex;
+        gap: 0.5rem;
+    }
+    .action-btn {
+        width: 34px;
+        height: 34px;
+        border-radius: 8px;
+        border: 1px solid var(--glass-border);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-size: 0.85rem;
+        text-decoration: none;
+    }
+    .btn-edit {
+        background: rgba(33, 150, 243, 0.1);
+        color: #2196f3;
+        border-color: rgba(33, 150, 243, 0.3);
+    }
+    .btn-edit:hover {
+        background: rgba(33, 150, 243, 0.2);
+        transform: scale(1.1);
+    }
+    .btn-delete {
+        background: rgba(244, 67, 54, 0.1);
+        color: #f44336;
+        border-color: rgba(244, 67, 54, 0.3);
+    }
+    .btn-delete:hover {
+        background: rgba(244, 67, 54, 0.2);
+        transform: scale(1.1);
+    }
+
+    /* Status badges */
+    .status-badge {
+        padding: 0.3rem 0.8rem;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: 600;
+    }
+    .status-pending { background: rgba(255, 193, 7, 0.15); color: #ffc107; }
+    .status-shipped { background: rgba(33, 150, 243, 0.15); color: #2196f3; }
+    .status-delivered { background: rgba(76, 175, 80, 0.15); color: #4caf50; }
+    .status-cancelled { background: rgba(244, 67, 54, 0.15); color: #f44336; }
+    .status-form select {
+        background: var(--bg-dark);
+        border: 1px solid var(--glass-border);
+        color: var(--text-main);
+        padding: 0.3rem 0.5rem;
+        border-radius: 6px;
+        font-family: 'Outfit', sans-serif;
+        font-size: 0.85rem;
+    }
+    .status-form button {
+        background: var(--accent-primary);
+        color: white;
+        border: none;
+        padding: 0.3rem 0.7rem;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 0.8rem;
+        margin-left: 0.3rem;
+    }
+
+    /* Delete confirm modal */
+    .modal-overlay {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(0,0,0,0.6);
+        z-index: 2000;
+        align-items: center;
+        justify-content: center;
+    }
+    .modal-overlay.active { display: flex; }
+    .modal-box {
+        background: var(--surface-dark);
+        border: 1px solid var(--glass-border);
+        border-radius: 16px;
+        padding: 2rem;
+        max-width: 400px;
+        width: 90%;
+        text-align: center;
+        animation: fadeUp 0.3s ease;
+    }
+    @keyframes fadeUp {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    .modal-box h3 { margin-bottom: 0.5rem; }
+    .modal-box p { color: var(--text-muted); margin-bottom: 1.5rem; font-size: 0.95rem; }
+    .modal-actions { display: flex; gap: 1rem; justify-content: center; }
+    .modal-actions .btn-cancel {
+        padding: 0.6rem 1.5rem;
+        border-radius: 10px;
+        border: 1px solid var(--glass-border);
+        background: transparent;
+        color: var(--text-main);
+        cursor: pointer;
+        font-family: 'Outfit', sans-serif;
+        font-weight: 600;
+    }
+    .modal-actions .btn-confirm-delete {
+        padding: 0.6rem 1.5rem;
+        border-radius: 10px;
+        border: none;
+        background: #f44336;
+        color: white;
+        cursor: pointer;
+        font-family: 'Outfit', sans-serif;
+        font-weight: 600;
+    }
+
+    .table-wrapper { overflow-x: auto; }
+
+    /* Admin Search Bar */
+    .admin-search-wrapper {
+        margin-bottom: 2rem;
+    }
+    .admin-search-bar {
+        position: relative;
+        max-width: 500px;
+    }
+    .admin-search-bar input {
+        width: 100%;
+        padding: 0.85rem 2.8rem 0.85rem 3rem;
+        background: var(--surface-dark);
+        border: 1px solid var(--glass-border);
+        border-radius: 50px;
+        color: var(--text-main);
+        font-family: 'Outfit', sans-serif;
+        font-size: 0.95rem;
+        transition: all 0.3s ease;
+        box-sizing: border-box;
+    }
+    .admin-search-bar input:focus {
+        outline: none;
+        border-color: var(--accent-primary);
+        box-shadow: 0 0 0 3px rgba(157, 80, 187, 0.15);
+    }
+    .admin-search-bar input::placeholder {
+        color: var(--text-muted);
+    }
+    .admin-search-bar .search-icon {
+        position: absolute;
+        left: 1.1rem;
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--text-muted);
+        font-size: 0.9rem;
+        pointer-events: none;
+        transition: color 0.3s ease;
+    }
+    .admin-search-bar input:focus ~ .search-icon {
+        color: var(--accent-primary);
+    }
+    .admin-search-bar .search-clear {
+        position: absolute;
+        right: 1rem;
+        top: 50%;
+        transform: translateY(-50%);
+        background: none;
+        border: none;
+        color: var(--text-muted);
+        cursor: pointer;
+        font-size: 0.85rem;
+        padding: 4px;
+        display: none;
+        transition: color 0.3s ease;
+    }
+    .admin-search-bar .search-clear:hover {
+        color: var(--accent-primary);
+    }
+    .search-result-count {
+        margin-top: 0.6rem;
+        font-size: 0.82rem;
+        color: var(--text-muted);
+        padding-left: 1.2rem;
+        display: none;
+    }
+    .no-search-results {
+        text-align: center;
+        padding: 2.5rem 1rem;
+        color: var(--text-muted);
+        display: none;
+    }
+    .no-search-results i {
+        font-size: 2rem;
+        margin-bottom: 0.7rem;
+        display: block;
+    }
+
+    @media (max-width: 768px) {
+        .admin-table th, .admin-table td { padding: 0.8rem; font-size: 0.85rem; }
+        .product-thumb { width: 40px; height: 40px; }
+        .admin-search-bar { max-width: 100%; }
+    }
+</style>
+
+<div class="admin-header">
+    <h1><i class="fas fa-shield-alt" style="color: var(--accent-primary); margin-right: 10px;"></i>Admin Dashboard</h1>
+    <a href="{{ url_for('admin.new_product') }}" class="btn btn-primary">
+        <i class="fas fa-plus" style="margin-right: 8px;"></i>Add Product
+    </a>
+</div>
+
+<div class="admin-stats">
+    <div class="stat-card">
+        <div class="stat-icon"><i class="fas fa-box-open"></i></div>
+        <h3>Products</h3>
+        <div class="value">{{ products_count }}</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon"><i class="fas fa-shopping-bag"></i></div>
+        <h3>Orders</h3>
+        <div class="value">{{ orders_count }}</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon"><i class="fas fa-users"></i></div>
+        <h3>Users</h3>
+        <div class="value">{{ users_count }}</div>
+    </div>
+</div>
+
+<!-- Admin Search Bar -->
+<div class="admin-search-wrapper">
+    <div class="admin-search-bar">
+        <input type="text" id="adminSearch" placeholder="Search products, orders..." autocomplete="off">
+        <i class="fas fa-search search-icon"></i>
+        <button class="search-clear" id="searchClear" title="Clear search"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="search-result-count" id="searchResultCount"></div>
+</div>
+
+<!-- Tab Navigation -->
+<div class="admin-tabs">
+    <button class="admin-tab active" onclick="switchTab('products', this)"><i class="fas fa-box"></i>Products</button>
+    <button class="admin-tab" onclick="switchTab('orders', this)"><i class="fas fa-receipt"></i>Orders</button>
+</div>
+
+<!-- Products Tab -->
+<div class="tab-panel active" id="products-panel">
+    <div class="table-wrapper">
+        <table class="admin-table">
+            <thead>
+                <tr>
+                    <th>Product</th>
+                    <th>Category</th>
+                    <th>Price</th>
+                    <th>Stock</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for product in products %}
+                <tr>
+                    <td>
+                        <div class="product-info-cell">
+                            <img src="{{ product.image_url or 'https://via.placeholder.com/50x50/161618/9d50bb?text=...' }}" alt="{{ product.name }}" class="product-thumb" onerror="this.src='https://via.placeholder.com/50x50/161618/9d50bb?text=...'">
+                            <span class="name">{{ product.name }}</span>
+                        </div>
+                    </td>
+                    <td><span class="category-badge">{{ product.category }}</span></td>
+                    <td style="font-weight: 600; color: var(--accent-primary);">₹{{ "%.2f"|format(product.price) }}</td>
+                    <td>{{ product.stock }}</td>
+                    <td>
+                        <div class="action-btns">
+                            <a href="{{ url_for('admin.edit_product', product_id=product.id) }}" class="action-btn btn-edit" title="Edit"><i class="fas fa-pen"></i></a>
+                            <button class="action-btn btn-delete" title="Delete" data-name="{{ product.name }}" data-url="{{ url_for('admin.delete_product', product_id=product.id) }}"><i class="fas fa-trash"></i></button>
+                        </div>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="5" style="text-align: center; padding: 2rem; color: var(--text-muted);">No products yet.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <div class="no-search-results" id="noProductResults">
+        <i class="fas fa-search"></i>
+        <p>No products match your search.</p>
+    </div>
+</div>
+
+<!-- Orders Tab -->
+<div class="tab-panel" id="orders-panel">
+    <div class="table-wrapper">
+        <table class="admin-table">
+            <thead>
+                <tr>
+                    <th>Order ID</th>
+                    <th>Date</th>
+                    <th>Amount</th>
+                    <th>Status</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for order in recent_orders %}
+                <tr>
+                    <td><strong>#{{ order.id }}</strong></td>
+                    <td>{{ order.order_date.strftime('%b %d, %Y %I:%M %p') }}</td>
+                    <td style="font-weight: 600; color: var(--accent-primary);">₹{{ "%.2f"|format(order.total_amount) }}</td>
+                    <td><span class="status-badge status-{{ order.status|lower }}">{{ order.status }}</span></td>
+                    <td>
+                        <form action="{{ url_for('admin.update_order_status', order_id=order.id) }}" method="POST" class="status-form" style="display: flex; align-items: center;">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                            <select name="status">
+                                <option value="Pending" {{ 'selected' if order.status == 'Pending' }}>Pending</option>
+                                <option value="Shipped" {{ 'selected' if order.status == 'Shipped' }}>Shipped</option>
+                                <option value="Delivered" {{ 'selected' if order.status == 'Delivered' }}>Delivered</option>
+                                <option value="Cancelled" {{ 'selected' if order.status == 'Cancelled' }}>Cancelled</option>
+                            </select>
+                            <button type="submit"><i class="fas fa-check"></i></button>
+                        </form>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="5" style="text-align: center; padding: 2rem; color: var(--text-muted);">No orders yet.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <div class="no-search-results" id="noOrderResults">
+        <i class="fas fa-search"></i>
+        <p>No orders match your search.</p>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal-overlay" id="deleteModal">
+    <div class="modal-box">
+        <h3><i class="fas fa-exclamation-triangle" style="color: #f44336; margin-right: 8px;"></i>Delete Product</h3>
+        <p>Are you sure you want to delete <strong id="deleteProductName"></strong>? This cannot be undone.</p>
+        <div class="modal-actions">
+            <button class="btn-cancel" onclick="hideDeleteModal()">Cancel</button>
+            <form id="deleteForm" method="POST" style="display: inline;">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                <button type="submit" class="btn-confirm-delete"><i class="fas fa-trash" style="margin-right: 6px;"></i>Delete</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    function switchTab(tab, btn) {
+        document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+        document.querySelectorAll('.admin-tab').forEach(t => t.classList.remove('active'));
+        document.getElementById(tab + '-panel').classList.add('active');
+        btn.classList.add('active');
+        // Re-run search filter when switching tabs
+        filterAdminTable();
+    }
+
+    function showDeleteModal(productName, deleteUrl) {
+        document.getElementById('deleteProductName').textContent = productName;
+        document.getElementById('deleteForm').action = deleteUrl;
+        document.getElementById('deleteModal').classList.add('active');
+    }
+
+    function hideDeleteModal() {
+        document.getElementById('deleteModal').classList.remove('active');
+    }
+
+    document.getElementById('deleteModal').addEventListener('click', function(e) {
+        if (e.target === this) hideDeleteModal();
+    });
+
+    document.querySelectorAll('.btn-delete').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            showDeleteModal(this.dataset.name, this.dataset.url);
+        });
+    });
+
+    // ==================== ADMIN SEARCH ====================
+    (function() {
+        var searchInput = document.getElementById('adminSearch');
+        var clearBtn = document.getElementById('searchClear');
+        var resultCount = document.getElementById('searchResultCount');
+        var noProductResults = document.getElementById('noProductResults');
+        var noOrderResults = document.getElementById('noOrderResults');
+
+        searchInput.addEventListener('input', filterAdminTable);
+
+        clearBtn.addEventListener('click', function() {
+            searchInput.value = '';
+            filterAdminTable();
+            searchInput.focus();
+        });
+    })();
+
+    function filterAdminTable() {
+        var searchInput = document.getElementById('adminSearch');
+        var clearBtn = document.getElementById('searchClear');
+        var resultCount = document.getElementById('searchResultCount');
+        var query = searchInput.value.toLowerCase().trim();
+
+        // Toggle clear button
+        clearBtn.style.display = query ? 'block' : 'none';
+
+        // Determine which tab is active
+        var productsActive = document.getElementById('products-panel').classList.contains('active');
+
+        if (productsActive) {
+            var rows = document.querySelectorAll('#products-panel .admin-table tbody tr');
+            var visibleCount = 0;
+            rows.forEach(function(row) {
+                var text = row.textContent.toLowerCase();
+                var match = !query || text.indexOf(query) !== -1;
+                row.style.display = match ? '' : 'none';
+                if (match) visibleCount++;
+            });
+            // Show/hide no-results message
+            var noProductResults = document.getElementById('noProductResults');
+            noProductResults.style.display = (query && visibleCount === 0) ? 'block' : 'none';
+            document.querySelector('#products-panel .table-wrapper').style.display = (query && visibleCount === 0) ? 'none' : 'block';
+
+            if (query) {
+                resultCount.style.display = 'block';
+                resultCount.textContent = visibleCount + ' product' + (visibleCount !== 1 ? 's' : '') + ' found';
+            } else {
+                resultCount.style.display = 'none';
+            }
+        } else {
+            var rows = document.querySelectorAll('#orders-panel .admin-table tbody tr');
+            var visibleCount = 0;
+            rows.forEach(function(row) {
+                var text = row.textContent.toLowerCase();
+                var match = !query || text.indexOf(query) !== -1;
+                row.style.display = match ? '' : 'none';
+                if (match) visibleCount++;
+            });
+            var noOrderResults = document.getElementById('noOrderResults');
+            noOrderResults.style.display = (query && visibleCount === 0) ? 'block' : 'none';
+            document.querySelector('#orders-panel .table-wrapper').style.display = (query && visibleCount === 0) ? 'none' : 'block';
+
+            if (query) {
+                resultCount.style.display = 'block';
+                resultCount.textContent = visibleCount + ' order' + (visibleCount !== 1 ? 's' : '') + ' found';
+            } else {
+                resultCount.style.display = 'none';
+            }
+        }
+    }
+</script>
+{% endblock %}

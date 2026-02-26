@@ -1,0 +1,61 @@
+<style>
+    .account-tabs {
+        display: flex;
+        gap: 0.5rem;
+        margin-bottom: 2rem;
+        padding: 0.5rem;
+        background: var(--surface-dark);
+        border: 1px solid var(--glass-border);
+        border-radius: 16px;
+        width: fit-content;
+        animation: fadeUp 0.4s ease;
+    }
+    .account-tab {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 0.7rem 1.2rem;
+        border-radius: 12px;
+        color: var(--text-muted);
+        text-decoration: none;
+        font-weight: 600;
+        font-size: 0.95rem;
+        transition: all 0.3s ease;
+    }
+    .account-tab i {
+        font-size: 1rem;
+    }
+    .account-tab:hover {
+        background: var(--glass-bg);
+        color: var(--text-main);
+    }
+    .account-tab.active {
+        background: linear-gradient(45deg, var(--accent-primary), var(--accent-secondary));
+        color: white;
+        box-shadow: 0 4px 15px var(--accent-glow);
+    }
+    @media (max-width: 600px) {
+        .account-tabs {
+            width: 100%;
+            overflow-x: auto;
+            white-space: nowrap;
+            justify-content: flex-start;
+        }
+        .account-tab {
+            padding: 0.6rem 1rem;
+            font-size: 0.85rem;
+        }
+    }
+</style>
+
+<div class="account-tabs">
+    <a href="{{ url_for('shop.order_history') }}" class="account-tab {{ 'active' if request.endpoint == 'shop.order_history' }}">
+        <i class="fas fa-receipt"></i> My Orders
+    </a>
+    <a href="{{ url_for('shop.wishlist') }}" class="account-tab {{ 'active' if request.endpoint == 'shop.wishlist' }}">
+        <i class="fas fa-heart"></i> Wishlist
+    </a>
+    <a href="{{ url_for('shop.addresses') }}" class="account-tab {{ 'active' if request.endpoint == 'shop.addresses' }}">
+        <i class="fas fa-map-marker-alt"></i> Addresses
+    </a>
+</div>

@@ -1,0 +1,152 @@
+{% extends "base.html" %}
+{% block content %}
+<style>
+    .cart-container {
+        display: grid;
+        grid-template-columns: 2fr 1fr;
+        gap: 3rem;
+    }
+    .cart-item {
+        display: flex;
+        align-items: center;
+        padding: 1.5rem;
+        background: var(--surface-dark);
+        border: 1px solid var(--glass-border);
+        border-radius: 15px;
+        margin-bottom: 1.5rem;
+    }
+    .cart-item img {
+        width: 100px;
+        height: 100px;
+        object-fit: cover;
+        border-radius: 10px;
+        margin-right: 1.5rem;
+    }
+    .cart-item-details { flex-grow: 1; }
+    .cart-summary {
+        background: var(--surface-dark);
+        border: 1px solid var(--glass-border);
+        border-radius: 15px;
+        padding: 2rem;
+        position: sticky;
+        top: 100px;
+        height: fit-content;
+    }
+    .quantity-control {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+    .quantity-input {
+        width: 50px;
+        background: var(--bg-dark);
+        border: 1px solid var(--glass-border);
+        color: white;
+        padding: 5px;
+        text-align: center;
+        border-radius: 5px;
+    }
+    .address-select {
+        width: 100%;
+        padding: 0.7rem 1rem;
+        background: var(--bg-dark);
+        border: 1px solid var(--glass-border);
+        border-radius: 10px;
+        color: var(--text-main);
+        font-family: 'Outfit', sans-serif;
+        font-size: 0.9rem;
+        margin-bottom: 0.8rem;
+    }
+    .address-select:focus {
+        outline: none;
+        border-color: var(--accent-primary);
+    }
+    .address-select option {
+        background: var(--surface-dark);
+        color: var(--text-main);
+    }
+    .add-addr-link {
+        display: inline-block;
+        color: var(--accent-primary);
+        text-decoration: none;
+        font-size: 0.85rem;
+        font-weight: 500;
+        margin-bottom: 1rem;
+    }
+    .add-addr-link:hover { text-decoration: underline; }
+    .summary-divider {
+        height: 1px;
+        background: var(--glass-border);
+        margin: 1rem 0;
+    }
+    @media (max-width: 768px) {
+        .cart-container { grid-template-columns: 1fr; }
+    }
+</style>
+
+<h1>Your Shopping Cart</h1>
+
+{% if cart_items %}
+<div class="cart-container">
+    <div>
+        {% for item in cart_items %}
+        <div class="cart-item">
+            <img src="{{ item.product.image_url if item.product.image_url else url_for('static', filename='product_pics/' + item.product.image_file) }}" alt="{{ item.product.name }}" onerror="this.src='https://via.placeholder.com/100x100/161618/9d50bb?text=Item'">
+            <div class="cart-item-details">
+                <h3>{{ item.product.name }}</h3>
+                <p style="color: var(--accent-primary); font-weight: 700;">₹{{ "%.2f"|format(item.product.price) }}</p>
+                <form action="{{ url_for('shop.update_cart', item_id=item.id) }}" method="POST" class="quantity-control">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                    <label>Qty:</label>
+                    <input type="number" name="quantity" value="{{ item.quantity }}" min="1" class="quantity-input" onchange="this.form.submit()">
+                    <a href="{{ url_for('shop.remove_from_cart', item_id=item.id) }}" style="color: #f44336; margin-left: 20px;"><i class="fas fa-trash"></i></a>
+                </form>
+            </div>
+            <div style="font-weight: 700;">
+                ₹{{ "%.2f"|format(item.product.price * item.quantity) }}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    <div class="cart-summary">
+        <h2>Summary</h2>
+        <div style="display: flex; justify-content: space-between; margin: 1.5rem 0;">
+            <span>Subtotal</span>
+            <span>₹{{ "%.2f"|format(total) }}</span>
+        </div>
+        <div style="display: flex; justify-content: space-between; margin: 1.5rem 0; font-weight: 700; font-size: 1.2rem;">
+            <span>Total</span>
+            <span style="color: var(--accent-primary);">₹{{ "%.2f"|format(total) }}</span>
+        </div>
+        <div class="summary-divider"></div>
+        <form action="{{ url_for('shop.checkout') }}" method="POST">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+            <label style="font-size: 0.85rem; color: var(--text-muted); display: block; margin-bottom: 0.5rem;">
+                <i class="fas fa-map-marker-alt" style="margin-right: 5px;"></i>Shipping Address
+            </label>
+            {% if addresses %}
+            <select name="address_id" class="address-select">
+                {% for addr in addresses %}
+                <option value="{{ addr.id }}" {{ 'selected' if addr.is_default }}>
+                    {{ addr.full_name }} — {{ addr.address_line1 }}, {{ addr.city }} {{ addr.pincode }}
+                </option>
+                {% endfor %}
+            </select>
+            {% else %}
+            <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.5rem;">No saved addresses.</p>
+            {% endif %}
+            <a href="{{ url_for('shop.addresses') }}" class="add-addr-link"><i class="fas fa-plus" style="margin-right: 4px;"></i>Manage Addresses</a>
+            <button type="submit" class="btn btn-primary" style="width: 100%; padding: 1rem; font-size: 1.05rem; margin-top: 0.5rem;">
+                <i class="fas fa-lock" style="margin-right: 8px;"></i>Proceed to Checkout
+            </button>
+        </form>
+    </div>
+</div>
+{% else %}
+<div style="text-align: center; padding: 5rem;">
+    <i class="fas fa-shopping-cart" style="font-size: 4rem; color: var(--text-muted); margin-bottom: 2rem;"></i>
+    <p>Your cart is empty.</p>
+    <a href="{{ url_for('shop.home') }}" class="btn btn-primary" style="margin-top: 1rem; display: inline-block;">Start Shopping</a>
+</div>
+{% endif %}
+{% endblock %}
