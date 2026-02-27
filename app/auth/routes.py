@@ -43,14 +43,7 @@ def verify_recaptcha(recaptcha_response):
 
 @auth.route("/register", methods=["GET", "POST"])
 def register():
-    site_key = current_app.config.get('RECAPTCHA_SITE_KEY', '')
     if request.method == "POST":
-        # Verify reCAPTCHA
-        recaptcha_response = request.form.get('g-recaptcha-response')
-        if not verify_recaptcha(recaptcha_response):
-            flash("Please complete the reCAPTCHA verification.", "danger")
-            return redirect(url_for("auth.register"))
-
         username = request.form.get("username")
         email = request.form.get("email")
         password = request.form.get("password")
@@ -77,7 +70,7 @@ def register():
         flash("Registration successful. Please login.", "success")
         return redirect(url_for("auth.login"))
 
-    return render_template("auth/register.html", site_key=site_key)
+    return render_template("auth/register.html")
 
 
 # ---------------- LOGIN ----------------

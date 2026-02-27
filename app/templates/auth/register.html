@@ -102,7 +102,7 @@
         margin-bottom: 1.5rem;
     }
 </style>
-<script src="https://www.google.com/recaptcha/api.js" async defer></script>
+
 
 <div class="auth-container">
     <div class="auth-card">
@@ -124,9 +124,7 @@
                 <label for="password">Password</label>
                 <input type="password" id="password" name="password" class="form-control" placeholder="Create a strong password" required minlength="6">
             </div>
-            <div class="recaptcha-wrapper">
-                <div class="g-recaptcha" data-sitekey="{{ site_key }}" data-theme="dark"></div>
-            </div>
+
             <button type="submit" class="auth-btn">
                 <i class="fas fa-rocket" style="margin-right: 8px;"></i> Create Account
             </button>
